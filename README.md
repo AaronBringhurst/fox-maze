@@ -41,3 +41,4 @@ Then open the printed local URL. `npm run build` produces a production bundle in
 ## Deployment
 
 Pushes to `main` automatically build and publish to GitHub Pages via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Enable Pages for the repo once (Settings → Pages → Source: GitHub Actions) and it deploys on every push.
+# fox-maze
