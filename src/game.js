@@ -6,6 +6,7 @@ import {
   LASER_DURATION, LASER_RANGE, HASTE_DURATION,
 } from './world.js';
 import { Renderer } from './graphics.js';
+import { audio } from './audio.js'
 
 const $ = id => document.getElementById(id);
 const canvas = $('game');
@@ -42,6 +43,7 @@ let buffered = null;     // next queued direction (index into dirs), applied on 
 let particles = [];
 let level = 1;
 let W = 0, H = 0;
+let lastStepPhase = 0; // 0 = awaiting first footfall this cell, 1 = mid-step, 2 = already played both
 
 let laserTime = 0;       // seconds of laser eyes remaining
 let laserCooldown = 0;   // seconds until the next shot can fire
@@ -61,6 +63,7 @@ function makeMaze(givenSeed, newLevel = 1) {
   hasteTime = 0;
   gateLabelTimer = 5;
   pathClock = 0; pressed = []; buffered = null;
+  lastStepPhase = 0;
   field = distances(maze, fox.toX, fox.toY);
   $('seed').textContent = 'GROVE / ' + seed.toString(16).padStart(8, '0').toUpperCase();
   sync();
@@ -111,6 +114,8 @@ function modal(tag, title, text, buttonLabel) {
 }
 
 function start() {
+  audio.init();
+  audio.playMusic();
   if (state === 'paused') {
     state = 'playing';
   } else if (state === 'intro') {
@@ -131,17 +136,20 @@ function start() {
 
 function pause() {
   if (state === 'playing') {
+    audio.pauseMusic();
     state = 'paused';
     pressed = []; buffered = null;
     $('pause').textContent = 'Resume';
     modal('Take a breath', 'The woods can wait.', 'Your fox is safe while the game is paused.', 'Back to the grove →');
   } else if (state === 'paused') {
+    audio.resumeMusic();
     start();
   }
 }
 
 function doDash() {
   if (state === 'playing' && cooldown <= 0) {
+    audio.dash();
     dash = 0.42;
     cooldown = 3;
     toast('Spirit dash — the cats cannot touch you.');
@@ -164,6 +172,8 @@ function shootLaser() {
     if (distance <= nearest && laserSight(maze, fox.x, fox.y, cat.x, cat.y)) { target = cat; nearest = distance; }
   }
   if (!target) return;
+  audio.laserShot();
+  audio.catHurt();
   beams.push({ x: target.x, y: target.y, phase: target.phase, life: 0.22 });
   burst(target.x, target.y, '#ff8eb4');
   target.dead = true;
@@ -198,6 +208,21 @@ function update(dt) {
   }
   advance(fox, dt, dash > 0 ? 10 : hasteTime > 0 ? 7 : 4.3);
 
+  // Two footfalls per grid step, skipped while dashing (the dash whoosh covers it).
+  if (dash <= 0) {
+    if (fox.t < 1) {
+      if (fox.t >= 0.15 && lastStepPhase === 0) {
+        audio.step();
+        lastStepPhase = 1;
+      } else if (fox.t >= 0.65 && lastStepPhase === 1) {
+        audio.step();
+        lastStepPhase = 2;
+      }
+    } else {
+      lastStepPhase = 0;
+    }
+  }
+
   if (dash > 0) trail.push({ x: fox.x, y: fox.y, life: 0.3 });
   trail = trail.filter(p => (p.life -= dt) > 0);
 
@@ -207,6 +232,7 @@ function update(dt) {
     w.got = true;
     collected++;
     totalGems++;
+    audio.gemPickup();
 
     let effectMessage;
     if (w.kind === 'speed') {
@@ -216,7 +242,7 @@ function update(dt) {
     } else {
       laserTime = LASER_DURATION;
       laserCooldown = 0;
-      burst(w.x, w.y, '#c3ffcf');
+      burst(w.x, w.y, '#ff4d6d');
       effectMessage = collected === 3
         ? 'All three gems found! Laser eyes refreshed — 8 seconds.'
         : collected + ' of 3 gems. Laser eyes active — auto-fire for 8 seconds!';
@@ -255,6 +281,7 @@ function update(dt) {
       if (invuln <= 0 && dash <= 0 && Math.hypot(cat.x - fox.x, cat.y - fox.y) < 0.58) {
         lives--;
         invuln = 3;
+        audio.playerHit();
         burst(fox.x, fox.y, '#ffab77');
         cats = cats.map(c => ({ ...c, ...actor(c.homeX, c.homeY) })); // send every cat back home
         toast('A close call! The cats retreat. Dash with Space.');
@@ -330,6 +357,8 @@ document.addEventListener('visibilitychange', () => {
 $('play').onclick = start;
 $('pause').onclick = pause;
 $('new').onclick = () => {
+  audio.init();
+  audio.playMusic();
   makeMaze();
   state = 'playing';
   $('veil').classList.add('hidden');
