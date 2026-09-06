@@ -1,5 +1,5 @@
-// src/audio.js
-class SoundManager {
+// Browser audio service; create one instance per application.
+export class SoundManager {
   constructor() {
     this.ctx = null;
     this.music = null;
@@ -123,5 +123,3 @@ class SoundManager {
     }
   }
 }
-
-export const audio = new SoundManager();

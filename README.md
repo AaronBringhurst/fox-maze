@@ -22,12 +22,30 @@ An isometric maze chase: guide the fox through a procedurally generated grove, c
 
 ## Project structure
 
-```
-index.html       Canvas, HUD, and modal markup; loads src/game.js as a module
-src/world.js      Pure game logic: PRNG, maze generation, BFS, collision, actor stepping
-src/graphics.js   PixiJS setup, the isometric projection, and every drawing routine
-src/game.js       Input handling, entity state, the game loop, and HUD syncing
-```
+The application starts in `src/main.js`. Modules are organized by ownership:
+
+- `src/config/`: default balance values and direction constants.
+- `src/content/`: enemy/pickup definitions and the current level plan.
+- `src/core/`: input binding, audio, and seeded random numbers.
+- `src/entities/`: shared actor model and entity-specific drawing.
+- `src/world/`: maze layout, object placement, pathfinding, collision, and grid movement.
+- `src/state/`: session creation and level reset rules; `state.run` survives level transitions.
+- `src/systems/`: movement, pickups, combat, enemies, and particles. No DOM or Pixi dependencies.
+- `src/scenes/`: gameplay lifecycle and system update order.
+- `src/rendering/`: Pixi setup, projection, terrain, and visual effects.
+- `src/ui/`: HUD, overlays, and styles.
+- `tests/`: seeded generation and gameplay regression checks.
+
+### Adding content
+
+Edit `content/progression.js` to plan level dimensions, enemy counts, and pickup counts. The current defaults preserve the original 19×19 endless game. Layout generation accepts odd width/height values of at least 7; placement runs afterward using the same seeded random stream.
+
+Enemy and pickup tuning lives in `content/`; implement new behavior in the relevant `systems/` module and add its visual under `entities/`. Keep world calculations in grid coordinates and convert to screen coordinates only in rendering.
+
+`PlayScene` owns a session and calls systems in a deliberate order: timers, movement, pickups, exit transition, pathfinding, lasers, enemies, particles, then HUD. Systems receive state and feedback callbacks; they do not import a global session, UI, or audio singleton.
+
+Run progress (level, lives, lifetime gems) lives in `state.run`; level objects and temporary effects are replaced by `loadLevel`. Saves, bosses, additional scenes, and an event bus are future features rather than placeholder implementations.
+
 
 ## Local development
 
@@ -35,6 +53,8 @@ src/game.js       Input handling, entity state, the game loop, and HUD syncing
 npm install
 npm run dev
 ```
+
+Run `npm test` for regression checks (no additional test dependency required).
 
 Then open the printed local URL. `npm run build` produces a production bundle in `dist/`; `npm run preview` serves that build locally.
 

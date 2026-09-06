@@ -5,6 +5,7 @@
   "type": "module",
   "description": "An isometric maze chase built with PixiJS — guide the fox to the exit, one procedurally generated grove at a time.",
   "scripts": {
+    "test": "node --test",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

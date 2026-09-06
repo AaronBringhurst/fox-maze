@@ -1,0 +1,15 @@
+export const balance = Object.freeze({
+  mazeSize: 19,
+  loopAttempts: 18,
+  maxLives: 3,
+  gemsPerLife: 3,
+  dashDuration: 0.42,
+  dashCooldown: 3,
+  playerSpeed: 4.3,
+  dashSpeed: 10,
+  hitInvulnerability: 3,
+  pathInterval: 0.22,
+  pickupRadius: 0.48,
+  hitRadius: 0.58,
+  exitRadius: 0.45,
+});
