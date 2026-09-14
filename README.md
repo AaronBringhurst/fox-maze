@@ -2,7 +2,7 @@
 
 An isometric maze chase: guide the fox through a procedurally generated grove, collect gems, and reach the exit gate before the ghost cats catch up. Each new grove adds one more cat.
 
-**[Play the live demo →](https://aaronbringhurst.github.io/hollow-run/)**
+**[Play the live demo →](https://aaronbringhurst.github.io/fox-maze/)**
 
 ## Gameplay
 
