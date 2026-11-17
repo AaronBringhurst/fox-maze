@@ -20,6 +20,12 @@ An isometric maze chase: guide the fox through a procedurally generated grove, c
 - **Line-of-sight raycasting** — laser eyes only auto-fire at cats with an unobstructed line to the fox, via slab/AABB intersection tests against the wall grid.
 - **ES Modules**, no framework — plain JavaScript split by concern (see below), bundled with [Vite](https://vitejs.dev/).
 
+## Engineering highlights
+
+This project is structured to keep gameplay rules independent of the rendering layer. Seeded maze generation makes level layouts reproducible, while a shared breadth-first distance field lets multiple enemies pursue the player without maintaining independent pathfinding searches.
+
+The automated regression suite covers generated-maze reachability, deterministic level layouts, movement, combat, pickups, state transitions, and UI behavior. [GitHub Actions](.github/workflows/deploy.yml) runs the tests and production build before deploying the game.
+
 ## Project structure
 
 The application starts in `src/main.js`. Modules are organized by ownership:
@@ -50,11 +56,11 @@ Run progress (level, lives, lifetime gems) lives in `state.run`; level objects a
 ## Local development
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Run `npm test` for regression checks (no additional test dependency required).
+Run `npm test` for automated regression checks (using Node's built-in test runner). Run `npm run build` to verify the production bundle.
 
 Then open the printed local URL. `npm run build` produces a production bundle in `dist/`; `npm run preview` serves that build locally.
 
